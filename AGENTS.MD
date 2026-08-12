@@ -1,0 +1,2 @@
+- please do not run the server
+- when addign smth please when ur done go check it with `tsc --noEmit`, fix the types until ur done
