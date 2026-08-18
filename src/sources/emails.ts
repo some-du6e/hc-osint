@@ -36,5 +36,9 @@ export function getEmailHistory(app: App, target: String) {
     ]
 
 
+    
+    return renderEmailHistory(emails)
+
+
 
 }
