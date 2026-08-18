@@ -20,12 +20,11 @@ function renderEmailHistory(emails: { email: string; source: string; source_url?
 
 
 
-export function getEmailHistory(app: App) {
+export function getEmailHistory(app: App, target: String) {
     let emails = [
         {
             "email": "new@example.com",
-            "source": "direct",
-            "ts_gotten": 6767676767
+            "source": "direct"
         },
         {
             "email": "old@example.com",
@@ -34,6 +33,8 @@ export function getEmailHistory(app: App) {
         }
     ]
 
+
+    return renderEmailHistory(emails)
 
 
 }
