@@ -24,17 +24,17 @@ export function getEmailHistory(app: App, target: String) {
     let emails = [
         {
             "email": "new@example.com",
-            "source": "direct"
+            "source": "direct",
+            "ts": 6767676767
         },
         {
             "email": "old@example.com",
             "source": "history",
-            "source_url": "https://hackclub.slack.com/archives/xxxxx"
+            "ts": 6767676767
+
         }
     ]
 
-
-    return renderEmailHistory(emails)
 
 
 }
