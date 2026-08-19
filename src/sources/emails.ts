@@ -18,7 +18,7 @@ function renderEmailHistory(emails: { email: string; source: string; source_url?
 }
 
 
-export function getEmailHistory(app: App, target: string): AnyBlock[] {
+export async function getEmailHistory(app: App, target: string): Promise<AnyBlock[]> {
     const emails = [
         {
             email: "new@example.com",
@@ -31,6 +31,6 @@ export function getEmailHistory(app: App, target: string): AnyBlock[] {
             ts: 6767676767,
         },
     ]
-
+    
     return renderEmailHistory(emails)
 }

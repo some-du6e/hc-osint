@@ -17,6 +17,22 @@ export interface Source {
 }
 
 
+// temporary fake sources to exercise the streaming plan + broadcast
+const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms))
+
+function fakeSource(id: string, name: string, message: string, ms: number, finding: string): Source {
+    return {
+        id,
+        name,
+        frontendMessage: message,
+        run: async () => {
+            await sleep(ms)
+            return [{ type: "markdown", text: `## ${name}\n${finding}` }]
+        },
+    }
+}
+
+
 export function getSources(target: string): Source[] {
     return [
         {
@@ -25,6 +41,10 @@ export function getSources(target: string): Source[] {
             frontendMessage: "Getting old emails...",
             run: async () => getEmailHistory(bot, target),
         },
+        fakeSource("names", "Names", "Scraping names...", 1500, `Found 3 names linked to ${target}.`),
+        fakeSource("usernames", "Usernames", "Checking username leaks...", 2500, `2 breached usernames for ${target}.`),
+        fakeSource("domains", "Domains", "Looking up registered domains...", 3500, `${target} owns 1 domain.`),
+        fakeSource("breaches", "Breaches", "Cross-referencing breach databases...", 4500, `${target} appears in 4 breaches.`),
     ]
 }
 
@@ -36,6 +56,9 @@ class Progress {
     bot: App
     channel: string | undefined
     streamTs: string | undefined
+    threadTs: string | undefined
+    // accumulated result blocks from completed tasks, broadcast at the end
+    resultBlocks: AnyBlock[] = []
 
     constructor(bot: App) {
         this.bot = bot
@@ -48,11 +71,13 @@ class Progress {
         const channel = dm.channel?.id as string
         this.channel = channel
 
-        // parent message so the streaming plan block lives in a thread
+        // chat.startStream requires thread_ts — streams must reply to a user
+        // request, so we need a parent message for the thread to live under.
         const parent = await this.bot.client.chat.postMessage({
             channel,
-            markdown_text: "see thread for progress",
+            markdown_text: `Looking up **${target}**...`,
         })
+        this.threadTs = parent.ts as string
 
         const stream = await this.bot.client.chat.startStream({
             channel,
@@ -114,6 +139,7 @@ class Progress {
         ]
         if (result.length > 0) {
             chunks.push({ type: "blocks", blocks: result })
+            this.resultBlocks.push(...result)
         }
         await this.append(chunks)
     }
@@ -131,7 +157,7 @@ class Progress {
     }
 
     async finish(title = "Lookup complete") {
-        if (!this.channel || !this.streamTs) {
+        if (!this.channel || !this.streamTs || !this.threadTs) {
             throw new Error("stream not started")
         }
         await this.bot.client.chat.stopStream({
@@ -139,6 +165,17 @@ class Progress {
             ts: this.streamTs,
             chunks: [{ type: "plan_update", title }],
         })
+
+        // broadcast the final results back into the main channel view, like
+        // checking "also send to channel" on a thread reply
+        if (this.resultBlocks.length > 0) {
+            await this.bot.client.chat.postMessage({
+                channel: this.channel,
+                thread_ts: this.threadTs,
+                reply_broadcast: true,
+                blocks: this.resultBlocks,
+            })
+        }
     }
 }
 
