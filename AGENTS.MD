@@ -1,2 +1,2 @@
 - please do not run the server
-- when addign smth please when ur done go check it with `tsc --noEmit`, fix the types until ur done
+- when addign smth please when ur done go check it with `bunx tsc --noEmit` (or `bun run typecheck`), fix the types until ur done. bare `tsc` / `npx tsc` don't work — typescript is a peerDep not a devDep

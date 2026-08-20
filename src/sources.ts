@@ -195,7 +195,10 @@ export async function runSources(target: string, userId: string) {
             const result = await source.run()
             await progress.completeTask(source, result)
         } catch (err) {
-            await progress.failTask(source, err instanceof Error ? err.message : String(err))
+            // log the full error server-side; only send the user a generic,
+            // sanitized string so internal details never leak into the thread
+            console.error(`[sources] source "${source.id}" failed:`, err)
+            await progress.failTask(source, `Failed to complete ${source.name}.`)
         }
     }
 
